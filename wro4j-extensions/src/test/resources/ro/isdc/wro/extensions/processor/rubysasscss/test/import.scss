@@ -1,0 +1,6 @@
+@import 'imported';
+
+body {
+  @include large;
+  font: 100% Helvetica, sans-serif;
+}

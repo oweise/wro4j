@@ -1,0 +1,10 @@
+html,
+body,
+ul,
+ol {
+  margin: 2;
+  padding: 1; }
+
+body {
+  font-size: 15pt;
+  font: 100% Helvetica, sans-serif; }

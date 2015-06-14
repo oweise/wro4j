@@ -10,14 +10,23 @@ import java.io.FileReader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import ro.isdc.wro.WroRuntimeException;
+import ro.isdc.wro.config.Context;
 import ro.isdc.wro.extensions.processor.css.RubySassCssProcessor;
 import ro.isdc.wro.extensions.processor.support.sass.RubySassEngine;
+import ro.isdc.wro.extensions.processor.support.sass.RubySassImporter;
+import ro.isdc.wro.extensions.processor.support.sass.RubySassImporter.ImporterContext;
+import ro.isdc.wro.model.group.Inject;
+import ro.isdc.wro.model.resource.Resource;
+import ro.isdc.wro.model.resource.ResourceType;
+import ro.isdc.wro.model.resource.locator.factory.UriLocatorFactory;
 import ro.isdc.wro.util.Function;
 import ro.isdc.wro.util.WroTestUtils;
 
@@ -35,9 +44,25 @@ public class TestRubySassCssProcessor {
   /** A RubySassEngine to test */
   private RubySassCssProcessor processor;
 
+  private ImporterContext context;
+  
+  @Inject
+  private UriLocatorFactory uriLocatorFactory;
+
   @Before
   public void setUp() {
+    Context.set(Context.standaloneContext());
     processor = new RubySassCssProcessor();
+    WroTestUtils.createInjector().inject(processor);
+    context = new RubySassImporter.ImporterContext();
+    context.setEncoding("UTF-8");
+    context.setLocatorFactory(uriLocatorFactory);
+    context.setSearchPaths(Collections.singletonList(new File(System.getProperty("user.dir")).toURI()));
+  }
+  
+  @After
+  public void tearDown()  {
+      Context.unset();   
   }
 
   @Test
@@ -45,14 +70,14 @@ public class TestRubySassCssProcessor {
       throws Exception {
     final File testFolder = new File(url.getFile(), "test");
     final File expectedFolder = new File(url.getFile(), "expected");
-    WroTestUtils.compareFromDifferentFoldersByName(testFolder, expectedFolder, "css", "css", processor);
+    WroTestUtils.compareFromDifferentFoldersByNameWithPreProcessor(testFolder, expectedFolder, "scss", "css", processor);
   }
 
   @Test
   public void executeMultipleTimesDoesntThrowOutOfMemoryException() {
     final RubySassEngine engine = new RubySassEngine();
     for (int i = 0; i < 100; i++) {
-      engine.process("#navbar {width: 80%;}");
+      engine.process("#navbar {width: 80%;}", context);
     }
   }
 
@@ -86,7 +111,7 @@ public class TestRubySassCssProcessor {
       public Void apply(final File input)
           throws Exception {
         try {
-          processor.process(null, new FileReader(input), new StringWriter());
+          processor.process(Resource.create(input.toURI().toString(), ResourceType.CSS), new FileReader(input), new StringWriter());
           fail("Shouldn't have failed");
         } catch (final WroRuntimeException e) {
           // expected to throw exception, continue

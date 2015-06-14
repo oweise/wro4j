@@ -290,6 +290,17 @@ public class WroTestUtils {
     compareFromDifferentFolders(sourceFolder, targetFolder, new WildcardFileFilter("*." + srcExtension),
         Transformers.extensionTransformer("css"), processor);
   }
+  
+  /**
+   * Compares files with the same name from sourceFolder against it's counterpart in targetFolder, but allows source and
+   * target files to have different extensions. TODO run tests in parallel
+   */
+  public static void compareFromDifferentFoldersByNameWithPreProcessor(final File sourceFolder, final File targetFolder,
+      final String srcExtension, final String targetExtension, final ResourcePreProcessor processor)
+      throws IOException {
+    compareFromDifferentFolders(sourceFolder, targetFolder, new WildcardFileFilter("*." + srcExtension),
+        Transformers.extensionTransformer("css"), processor);
+  }
 
   private static void compareFromDifferentFolders(final File sourceFolder, final File targetFolder,
       final IOFileFilter fileFilter, final Transformer<String> toTargetFileName, final ResourcePostProcessor processor)

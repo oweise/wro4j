@@ -3,6 +3,7 @@ package ro.isdc.wro.extensions.processor.support.sass;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.script.ScriptEngine;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ro.isdc.wro.WroRuntimeException;
+import ro.isdc.wro.model.resource.locator.factory.UriLocatorFactory;
 
 
 /**
@@ -58,13 +60,16 @@ public class RubySassEngine {
    *
    * @param content
    *          the Sass content to process.
+ * @param searchPaths 
+ * @param locatorFactory 
    */
-  public synchronized String process(final String content) {
+  public synchronized String process(final String content, RubySassImporter.ImporterContext context) {
     if (StringUtils.isEmpty(content)) {
       return StringUtils.EMPTY;
     }
     try {
       final ScriptEngine rubyEngine = new ScriptEngineManager().getEngineByName("jruby");
+      rubyEngine.put("importerContext", context);
       return rubyEngine.eval(buildUpdateScript(content)).toString();
     } catch (final ScriptException e) {
       throw new WroRuntimeException(e.getMessage(), e);
@@ -77,7 +82,10 @@ public class RubySassEngine {
     final PrintWriter script = new PrintWriter(raw);
     final StringBuilder sb = new StringBuilder();
     final StringBuilder cb = new StringBuilder();
-    sb.append(":syntax => :scss");
+    sb.append(":syntax => :scss, ");
+    sb.append(":filesystem_importer => Java::RoIsdcWroExtensionsProcessorSupportSass::RubySassImporter, ");
+    sb.append(":filesystem_importer_context => $importerContext");
+    
 
     for (final String require : requires) {
       script.println("  require '" + require + "'                                   ");

@@ -9,10 +9,12 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.concurrent.Callable;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ro.isdc.wro.config.Context;
 import ro.isdc.wro.extensions.processor.css.BourbonCssProcessor;
 import ro.isdc.wro.model.resource.ResourceType;
 import ro.isdc.wro.util.WroTestUtils;
@@ -34,7 +36,14 @@ public class TestBourbonCssProcessor {
 
   @Before
   public void initEngine() {
+    Context.set(Context.standaloneContext());
     processor = new BourbonCssProcessor();
+    WroTestUtils.createInjector().inject(processor);
+  }
+  
+  @After
+  public void tearDown() {
+      Context.unset();
   }
 
   /**
